@@ -64,6 +64,7 @@ $(function(){
       applyMargins();
     });
     $(window).on("resize", applyMargins);
+    
     olMap = new ol.Map({
       target: "map",
       layers: [
@@ -72,8 +73,8 @@ $(function(){
         })
       ],
       view: new ol.View({
-        center: [0, 0],
-        zoom: 2
+        center: [144, -37],
+        zoom: 4
       })
     });
     applyInitialUIState();

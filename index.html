@@ -69,6 +69,17 @@
       });
 
     </script>
+      
+    <script id="issue-list" type="template">
+
+    <% for(var i=0; i<issues.length; i++){ %>
+
+        <p> <%= issues[i].get("title") %> </p>
+
+    <% } %>
+
+    </script>
+      
   </head>
   <body>
     <div class="container">
