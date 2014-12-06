@@ -16,11 +16,11 @@
       .zoom-top-opened-sidebar { margin-top: 5px; }
       .zoom-top-collapsed { margin-top: 45px; }
       .mini-submenu{
-        display:none;  
+        display:none;
         background-color: rgba(255, 255, 255, 0.46);
         border: 1px solid rgba(0, 0, 0, 0.9);
         border-radius: 4px;
-        padding: 9px;  
+        padding: 9px;
         /*position: relative;*/
         width: 42px;
         text-align: center;
@@ -52,7 +52,7 @@
 
     </script>
     <script id="issuelist" type="template" data-title="Issues">
-    
+
     </script>
     <script id="issuedetails" type="template" data-title="Issue Details">
     </script>
@@ -64,8 +64,13 @@
     <script type="text/javascript" src="app/app.js"></script>
     <script type="text/javascript">
 
-      $(function() {
+      var Issue = Parse.Object.extend("Issue");
+      var Comment = Parse.Object.extend("Comment");
+      var Tags = Parse.Object.extend("Tags");
 
+      $(function() {
+          Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
+                           "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
       });
 
     </script>
