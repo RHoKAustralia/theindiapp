@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" />
+        <title>theindiapp bootstrap</title>
+        <script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script type="text/javascript" src="assets/js/parse-1.3.2.min.js"></script>
+        <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            var Issue = Parse.Object.extend("Issue");
+            var Comment = Parse.Object.extend("Comment");
+            var Tags = Parse.Object.extend("Tags");
+
+            function createUser(e) {
+                e.preventDefault(); //Prevent submission
+                if ($("#txtCreatePassword").val() != $("#txtCreateConfirmPassword").val()) {
+                    alert("Passwords do not match");
+                    return false;
+                }
+
+                var user = new Parse.User();
+                user.set("username", $("#txtCreateUsername").val());
+                user.set("password", $("#txtCreatePassword").val());
+
+                user.signUp(null, {
+                    success: function(user) {
+                        alert("User " + user.get("username") + " created");
+                    },
+                    error: function(user, error) {
+                        // Show the error message somewhere and let the user try again.
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+            }
+
+            function createIssue(e) {
+                e.preventDefault(); //Prevent submission
+
+                var issue = new Issue();
+                var coords = $("#txtIssueLocation").val().split(' ');
+                if (coords.length != 2 && coords.length != 0) {
+                    alert("Invalid coordinates. If you don't intend to include coordinates, leave this field blank");
+                    return;
+                }
+                for (var i = 0; i < coords.length; i++) {
+                    coords[i] = parseFloat(coords[i]);
+                }
+                var fileUploadControl = $("#fileIssueImage")[0];
+                var photoFile = null;
+                if (fileUploadControl.files.length > 0) {
+                    var file = fileUploadControl.files[0];
+                    var name = "photo.jpg";
+                 
+                    photoFile = new Parse.File(name, file);
+                }
+
+                //Set issue properties
+                issue.set("content", $("#txtIssueDescription").val());
+                //Don't be like google, geographic coordinates should be read/written as longitude/latitude and
+                //not the other way round. Would you express cartesian coordinates as y/x? Exactly!
+                issue.set("location", new Parse.GeoPoint({longitude: coords[0], latitude: coords[1]}));
+
+                var tags = [];
+                //Set the tags based on the selection
+                $( "#selIssueTags option:selected" ).each(function() {
+                    tags.push($(this).val());
+                });
+                issue.set("tags", tags);
+                issue.set("author", Parse.User.current());
+
+                var saveIssue = function(photo) {
+                    issue.set("image", photo);
+                    issue.save(null, {
+                        success: function(obj) {
+                            // Execute any logic that should take place after the object is saved.
+                            alert('New object created with objectId: ' + obj.id);
+                        },
+                        error: function(obj, error) {
+                            // Execute any logic that should take place if the save fails.
+                            // error is a Parse.Error with an error code and message.
+                            alert('Failed to create new object, with error code: ' + error.message);
+                        }
+                    });
+                };
+                //If we have a photo, it must be saved first before the issue itself
+                if (photoFile != null) {
+                    photoFile.save().then(function() {
+                        saveIssue(photoFile);
+                    }, function(error) {
+                        // The file either could not be read, or could not be saved to Parse.
+                        alert("Failed to save the photo: " + error);
+                    });
+                } else {
+                    saveIssue();
+                }
+            }
+
+            var loggedInUser = null;
+
+            function loginUser(e) {
+                e.preventDefault(); //Prevent submission
+                var user = $("#txtLoginUser").val();
+                var pass = $("#txtLoginPassword").val();
+                Parse.User.logIn(user, pass, {
+                    success: function(user) {
+                        // Do stuff after successful login.
+                        onSuccessfulLogin(user);
+                        alert("Login successful");
+                    },
+                    error: function(user, error) {
+                        // The login failed. Check error to see why.
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+                return false; //prevent submission
+            }
+
+            function checkLoginStatus() {
+                loggedInUser = Parse.User.current();
+                if (loggedInUser) {
+                    var username = loggedInUser.get("username");
+                    $("#loginStatus")
+                        .text("Welcome back " + username + ". Disregard the section below. You don't have to log in")
+                        .parent()
+                        .append("<span id='logoutSection'>Not " + username + "? <a id='lnkLogout' href='javascript:void(0)'>Log out</a></span>");
+                    onSuccessfulLogin(loggedInUser);
+                } else {
+                    $("#loginStatus").text("You are not logged in. Please login below before doing anything else");
+                    $("#logoutSection").remove();
+                }
+            }
+
+            function logoutUser(e) {
+                e.preventDefault(); //Prevent submission
+                Parse.User.logOut();
+                alert("You are now logged out");
+                checkLoginStatus();
+            }
+
+            function onSuccessfulLogin(user) {
+                loggedInUser = user;
+
+                //Fetch registered tags
+                var query = new Parse.Query(Tags);
+                query.find({
+                    success: function(results) {
+                        updateTags(results);
+                    },
+                    error: function(error) {
+                        alert("Error: " + error.code + " " + error.message);
+                    }
+                });
+            }
+
+            function updateTags(results) {
+                $(".issue-tag-list option").remove();
+                for (var i = 0; i < results.length; i++) {
+                    var tag = results[i];
+                    var value = tag.get("value");
+                     $(".issue-tag-list").append("<option value='" + value + "'>" + value + "</option>")
+                }
+            }
+
+            function runQueryByTag(e) {
+                e.preventDefault();
+
+                var tags = [];
+                //Set the tags based on the selection
+                $( "#qryIssueTags option:selected" ).each(function() {
+                    tags.push($(this).val());
+                });
+
+                var tagQuery = new Parse.Query(Issue);
+                tagQuery.containsAll("tags", tags);
+                tagQuery.find({
+                  success: function(results) {
+                    loadIssues(results);
+                    alert("Successfully retrieved " + results.length + " objects.");
+                  },
+                  error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                  }
+                });
+            }
+
+            function loadIssues(results) {
+                var html = "";
+                if (results.length > 0) {
+                    html += "<table class='table'>";
+                    html += "<tr>";
+                    html += "<th>ID</th>";
+                    html += "<th>Created</th>";
+                    html += "<th>Updated</th>";
+                    html += "<th>Content</th>";
+                    html += "<th>Tags</th>";
+                    html += "<th>Location</th>";
+                    html += "<th>Photo</th>";
+                    html += "<th>Comments</th>";
+                    html += "</tr>";
+                    for (var i = 0; i < results.length; i++) {
+                        html += "<tr>";
+                        html += "<td>" + results[i].id + "</td>"; //objectId
+                        html += "<td>" + results[i].createdAt + "</td>"; //createdAt
+                        html += "<td>" + results[i].updatedAt + "</td>"; //updatedAt
+                        html += "<td>" + (results[i].get("content") || "") + "</td>"; //content
+                        var tags = results[i].get("tags") || [];
+                        html += "<td>" + tags.join(',') + "</td>"; //tags
+                        var location = results[i].get("location");
+                        if (location != null)
+                            html += "<td>(" + location.longitude + " " + location.latitude + ")</td>"; //location
+                        else
+                            html += "<td>(null)</td>"; //location
+                        var photo = results[i].get("image");
+                        if (photo != null)
+                            html += "<td><a href='" + photo.url() + "' target='_blank'>Click here</a></td>"; //photo
+                        else
+                            html += "<td>(null)</td>"; //photo
+                        html += "<td><button data-action='comments' data-issue-id='" + results[i].id + "'>View Comments</button></td>"; //Comments
+                        html += "</tr>";
+                    }
+                    html += "</table>";
+                } else {
+                    html += "<strong>No matching issues for the given criteria</strong>";
+                }
+                $("#issueQueryResults").html(html);
+            }
+
+            function makeComment(e) {
+                e.preventDefault();
+                var issue = new Issue();
+                issue.id = $("#txtIssueId").val();
+                var comment = new Comment();
+                comment.set("author", loggedInUser);
+                comment.set("issue", issue);
+                comment.set("comment", $("#txtComment").val());
+                comment.save(null, {
+                    success: function(obj) {
+                        // Execute any logic that should take place after the object is saved.
+                        alert('New object created with objectId: ' + obj.id);
+                    },
+                    error: function(obj, error) {
+                        // Execute any logic that should take place if the save fails.
+                        // error is a Parse.Error with an error code and message.
+                        alert('Failed to create new object, with error code: ' + error.message);
+                    }
+                });
+            }
+
+            function loadIssueComments(e) {
+                var query = new Parse.Query(Comment);
+                var issue = new Issue();
+                issue.id = $(e.currentTarget).attr("data-issue-id");
+                query.equalTo("issue", issue);
+                query.find({
+                  success: function(results) {
+                    loadComments(results);
+                    alert("Successfully retrieved " + results.length + " comments.");
+                  },
+                  error: function(error) {
+                    alert("Error: " + error.code + " " + error.message);
+                  }
+                });
+            }
+
+            function loadComments(results) {
+                var html = "";
+                if (results.length > 0) {
+                    html += "<div class='list-group'>";
+                    for (var i = 0; i < results.length; i++) {
+                        html += "<div class='list-group-item'>";
+                        var user = results[i].get("author");
+                        if (user != null)
+                            html += "<p>" + user+ "</p>";
+                        else
+                            html += "<p>Unknown user</p>";
+                        html += "<p>" + results[i].createdAt + "</p>";
+                        html += "<p>" + results[i].get("comment") + "</p>";
+                        html += "</div>";
+                    }
+                    html += "</div>";
+                } else {
+                    html += "<p>No comments for given issue</p>";
+                }
+                $("#commentsForIssue").html(html);
+            }
+
+            $(function() {
+                Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */, 
+                                 "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
+
+                checkLoginStatus();
+
+                $("#btnCreateUser").click(createUser);
+                $("#btnLogin").click(loginUser);
+                $("#btnCreateIssue").click(createIssue);
+                $("#btnQueryByTag").click(runQueryByTag);
+                $("#lnkLogout").click(logoutUser);
+                $("#btnMakeComment").click(makeComment);
+                $("body").on('click', "button[data-action='comments']", loadIssueComments);
+
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    $("#txtIssueLocation").val(pos.coords.longitude + " " + pos.coords.latitude);
+                }, function(err) {
+                    $("#txtIssueLocation").val("Could not get your location: " + err);
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Login Status
+                        </div>
+                        <div class="panel-body">
+                            <div class="alert alert-info">
+                                <p id="loginStatus"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Create User
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <fieldset>
+                                    <!-- Text input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtCreateUsername">Username</label>
+                                        <div class="col-md-5">
+                                            <input id="txtCreateUsername" name="txtCreateUsername" type="text" placeholder="Username" class="form-control input-md" required="">
+                                            
+                                       </div>
+                                    </div>
+                                    <!-- Password input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtCreatePassword">Password</label>
+                                        <div class="col-md-5">
+                                            <input id="txtCreatePassword" name="txtCreatePassword" type="password" placeholder="Password" class="form-control input-md" required="">
+                                            
+                                        </div>
+                                    </div>
+                                    <!-- Password input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtCreateConfirmPassword">Confirm Password</label>
+                                        <div class="col-md-4">
+                                            <input id="txtCreateConfirmPassword" name="txtCreateConfirmPassword" type="password" placeholder="Confirm Password" class="form-control input-md" required="">
+                                            
+                                        </div>
+                                    </div>
+                                    <!-- Button -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="btnCreateUser"></label>
+                                        <div class="col-md-4">
+                                            <button id="btnCreateUser" name="btnCreateUser" class="btn btn-primary">Create</button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Login User (required for anything below)
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <fieldset>
+                                    <!-- Text input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtLoginUser">Username</label>
+                                        <div class="col-md-4">
+                                            <input id="txtLoginUser" name="txtLoginUser" type="text" placeholder="Username" class="form-control input-md" required="">
+                                            
+                                        </div>
+                                    </div>
+                                    <!-- Password input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtLoginPassword">Password</label>
+                                        <div class="col-md-4">
+                                            <input id="txtLoginPassword" name="txtLoginPassword" type="password" placeholder="Password" class="form-control input-md" required="">
+                                            
+                                        </div>
+                                    </div>
+                                    <!-- Button -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="btnLogin"></label>
+                                        <div class="col-md-4">
+                                            <button id="btnLogin" name="btnLogin" class="btn btn-primary">Login</button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Create Issue
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <fieldset>
+                                    <!-- Textarea -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtIssueDescription">Issue Description</label>
+                                        <div class="col-md-4">
+                                            <textarea class="form-control" id="txtIssueDescription" name="txtIssueDescription"></textarea>
+                                        </div>
+                                    </div>
+                                    <!-- Select Multiple -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="selIssueTags">Tags</label>
+                                        <div class="col-md-8">
+                                            <select id="selIssueTags" name="selIssueTags" class="form-control issue-tag-list" multiple="multiple">
+                                                
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!-- Appended Input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtIssueLocation">Location</label>
+                                        <div class="col-md-8">
+                                            <div class="input-group">
+                                                <input id="txtIssueLocation" name="txtIssueLocation" class="form-control" placeholder="placeholder" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Text input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="fileIssueImage">Attach Image</label>
+                                        <div class="col-md-8">
+                                            <input id="fileIssueImage" name="fileIssueImage" type="file" />
+                                        </div>
+                                    </div>
+                                    <!-- Button -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="btnCreateIssue"></label>
+                                        <div class="col-md-4">
+                                            <button id="btnCreateIssue" name="btnCreateIssue" class="btn btn-primary">Create Issue</button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Search Issues (by tags)
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <fieldset>
+                                    <!-- Select Multiple -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="qryIssueTags">Tags</label>
+                                        <div class="col-md-8">
+                                            <select id="qryIssueTags" name="qryIssueTags" class="form-control issue-tag-list" multiple="multiple">
+                                                
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!-- Button -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="btnQueryByTag"></label>
+                                        <div class="col-md-4">
+                                            <button id="btnQueryByTag" name="btnQueryByTag" class="btn btn-primary">Run Query</button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Search Issues Results
+                        </div>
+                        <div id="issueQueryResults" class="panel-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Comments on Issue
+                        </div>
+                        <div id="commentsForIssue" class="panel-body">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Make Comment on Issue
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <fieldset>
+                                    <!-- Text input-->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtIssueId">Issue ID</label>
+                                        <div class="col-md-5">
+                                            <input id="txtIssueId" name="txtIssueId" type="text" placeholder="Username" class="form-control input-md" required="">
+                                            
+                                       </div>
+                                    </div>
+                                    <!-- Textarea -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="txtComment">Comment</label>
+                                        <div class="col-md-4">
+                                            <textarea class="form-control" id="txtComment" name="txtComment"></textarea>
+                                        </div>
+                                    </div>
+                                    <!-- Button -->
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label" for="btnMakeComment"></label>
+                                        <div class="col-md-4">
+                                            <button id="btnMakeComment" name="btnMakeComment" class="btn btn-primary">Make Comment</button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
