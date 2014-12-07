@@ -14,6 +14,7 @@ function applyMargins() {
     var mapCtrl = $("#map");
     var zoomCtrl = $(".ol-zoom", mapCtrl);
     var sidebar = $(".sidebar-left");
+	var sidebarBody = $("#sidebar");
     var leftToggler = $(".mini-submenu-left");
     if (leftToggler.is(":visible")) { //Sidebar collapsed
       zoomCtrl
@@ -42,7 +43,7 @@ function applyMargins() {
         updateOlMapDom();
       }
     }
-    sidebar.height(getDesiredHeight(sidebar));
+    sidebarBody.height(getDesiredHeight(sidebarBody));
 }
 function isConstrained() {
     return $(".sidebar").width() == $(window).width();
@@ -56,8 +57,6 @@ function applyInitialUIState() {
 
 function refineIssues(tag){
     
-    
-    
     var tags = [];
     //Set the tags based on the selection
     $( "#qryIssueTags option:selected" ).each(function() {
@@ -68,7 +67,7 @@ function refineIssues(tag){
     tagQuery.containsAll("tags", tags);
     tagQuery.find({
       success: function(results) {
-        loadIssues(results);
+        populateIssues(results);
         alert("Successfully retrieved " + results.length + " objects.");
       },
       error: function(error) {
@@ -76,12 +75,6 @@ function refineIssues(tag){
       }
     });
 }
-
- function loadIssues(results) {
-    var html = "";
-    $("#issuesDiv").html(html);
-}
-
 
 function initTags(){
     //Fetch registered tags
@@ -105,7 +98,7 @@ function updateTags(results) {
     }
 }
 function populateIssues(issues) {
-    var tpl = $("#issue-list").template();
+    var tpl = _.template($("#issue-list").text());
     var html = tpl({issues: issues});
     $("#sidebar").html(html);
 }

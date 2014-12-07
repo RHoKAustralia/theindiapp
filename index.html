@@ -37,6 +37,7 @@
       .mini-submenu:hover{
         cursor: pointer;
       }
+	  #sidebar { overflow-y: auto; }
       .slide-submenu{
         background: rgba(0, 0, 0, 0.45);
         display: inline-block;
@@ -69,16 +70,21 @@
     <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="app/app.js"></script>
     <script id="issue-list" type="template">
-
+	<h3>Search Results (<%= issues.length %>)</h3>
+	<div class="list-group">
     <% for(var i = 0; i < issues.length; i++) { %>
-
-        <p> <%= issues[i].get("title") %> </p>
+	<div class="list-group-item">
+		<% var title = issues[i].get("title") %>
+		<% if (title != null) { %>
+        <strong> <%= title %> </strong>
+		<% } else { %>
+		<strong>(Untitled)</strong>
+		<% } %>
         <p> <%= issues[i].get("created_at") %> </p>
         <p> <%= issues[i].get("content") %> </p>
-        <p> <%= issues[i].get("location") %> </p>
-
-    <% }); %>
-
+	</div>
+    <% } %>
+	</div>
     </script>
 
   </head>
@@ -156,11 +162,7 @@
                   </span>
                 </h4>
               </div>
-              <div class="panel-body">
-                  <h1>Voices4Indi</h1>
-              </div>
-
-              <div id="sidebar" class="panel-collapse collapse in">
+              <div id="sidebar" class="panel-body">
                   <!-- Select Multiple -->
               <div class="form-group">
                 <label class="col-md-4 control-label" for="qryIssueTags">Tags</label>
