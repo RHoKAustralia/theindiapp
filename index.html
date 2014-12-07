@@ -62,19 +62,6 @@
     <script type="text/javascript" src="assets/js/parse-1.3.2.min.js"></script>
     <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="app/app.js"></script>
-    <script type="text/javascript">
-
-      var Issue = Parse.Object.extend("Issue");
-      var Comment = Parse.Object.extend("Comment");
-      var Tags = Parse.Object.extend("Tags");
-
-      $(function() {
-          Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
-                           "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
-      });
-
-    </script>
-      
     <script id="issue-list" type="template">
 
     <% for(var i=0; i<issues.length; i++){ %>
@@ -84,7 +71,7 @@
     <% } %>
 
     </script>
-      
+
   </head>
   <body>
     <div class="container">

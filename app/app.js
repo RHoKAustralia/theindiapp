@@ -1,3 +1,7 @@
+var Issue = Parse.Object.extend("Issue");
+var Comment = Parse.Object.extend("Comment");
+var Tags = Parse.Object.extend("Tags");
+
 var olMap = null;
 function updateOlMapDom() {
     olMap.setTarget($("#map")[0]);
@@ -49,7 +53,11 @@ function applyInitialUIState() {
       $('.mini-submenu-left').fadeIn();
     }
 }
+//Application entry point
 $(function(){
+    Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
+                     "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
+
     $('.sidebar-left .slide-submenu').on('click',function() {
       var thisEl = $(this);
       thisEl.closest('.sidebar-body').fadeOut('slide',function(){
@@ -64,7 +72,7 @@ $(function(){
       applyMargins();
     });
     $(window).on("resize", applyMargins);
-    
+
     olMap = new ol.Map({
       target: "map",
       layers: [
