@@ -74,7 +74,7 @@
 	<h3>Search Results (<%= issues.length %>)</h3>
 	<div class="list-group">
     <% for(var i = 0; i < issues.length; i++) { %>
-	<div class="list-group-item">
+	<div class="list-group-item issue-item" data-issue-id="<%= issues[i].id %>">
 		<div class="media">
 			<% var title = issues[i].titleShort() %>
 			<% if (title != null) { %>
@@ -88,6 +88,32 @@
 	</div>
     <% } %>
 	</div>
+    </script>
+
+    <script id="issue-comment" type="template">
+        <input type="button" onclick="" value="< Go Back" />
+
+        <% var title = issues[i].titleShort() %>
+        <% if (title != null) { %>
+            <h2 class="media-left"> <%= title %> </h2>
+        <% } else { %>
+            <h2 class="media-left">(Untitled)</h2>
+        <% } %>
+
+        <p class="media-right"> <%= issues[i].getTimeSince() %> </p>
+
+        <h3>Comments (<% comments.length %>)</h3>
+
+        <div class="list-group">
+            <% for(var i = 0; i < comments.length; i++) { %>
+                <div class="list-group-item">
+                    <div class="media">
+
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
     </script>
 
   </head>

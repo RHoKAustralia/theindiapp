@@ -78,7 +78,7 @@ function applyInitialUIState() {
 }
 
 function refineIssues(tag){
-    
+
     var tags = [];
     //Set the tags based on the selection
     $( "#qryIssueTags option:selected" ).each(function() {
@@ -124,11 +124,11 @@ function populateIssues(issues) {
     var tpl = _.template($("#issue-list").text());
     var html = tpl({issues: issues});
     $("#sidebar").html(html);
-    
+
     var icons = [];
     for(var i=0; i<issues.length; i++){
         var location = issues[i].get("location");
-        
+
         var iconFeature = new ol.Feature({
               geometry: new ol.geom.Point([location._longitude, location._latitude]).transform('EPSG:4326', 'EPSG:3857'),
               name: issues[i].get("title")
@@ -153,6 +153,54 @@ function populateIssues(issues) {
     olMap.addLayer(vectorLayer);
 }
 
+function loadIssueComments(e) {
+	var query = new Parse.Query(Comment);
+	var issue = new Issue();
+	issue.id = $(e.currentTarget).attr("data-issue-id");
+	query.equalTo("issue", issue);
+	query.find({
+		success: function(results) {
+			loadComments(results);
+			alert("Successfully retrieved " + results.length + " comments.");
+		},
+		error: function(error) {
+			alert("Error: " + error.code + " " + error.message);
+		}
+	});
+}
+
+function loadComments(results) {
+	var html = "";
+	if (results.length > 0) {
+		html += "<div class='list-group'>";
+		for (var i = 0; i < results.length; i++) {
+			html += "<div class='list-group-item'>";
+			var user = results[i].get("author");
+			if (user != null) {
+				html += "<p>" + user+ "</p>";
+			}
+			else {
+				html += "<p>Unknown user</p>";
+				html += "<p>" + results[i].createdAt + "</p>";
+				html += "<p>" + results[i].get("comment") + "</p>";
+				html += "</div>";
+			}
+
+			html += "</div>";
+		}
+	} else {
+		html += "<p>No comments for given issue</p>";
+	}
+
+	$("#commentsForIssue").html(html);
+}
+
+function viewIssue(issue_id) {
+	var comments = Parse.Query(Comment);
+
+	$("#sidebar").html();
+}
+
 $(function(){
     Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
                      "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
@@ -172,6 +220,8 @@ $(function(){
       applyMargins();
     });
     $(window).on("resize", applyMargins);
+
+	$('body').on('click', '.issue-item', loadIssueComments);
 
     olMap = new ol.Map({
       target: "map",
