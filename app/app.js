@@ -54,7 +54,6 @@ function applyInitialUIState() {
     }
 }
 
-<<<<<<< HEAD
 function refineIssues(tag){
     
     
@@ -104,15 +103,13 @@ function updateTags(results) {
         var value = tag.get("value");
          $(".issue-tag-list").append("<option value='" + value + "'>" + value + "</option>")
     }
-=======
+}
 function populateIssues(issues) {
     var tpl = $("#issue-list").template();
     var html = tpl({issues: issues});
     $("#sidebar").html(html);
->>>>>>> 81d90ad8f5d8eb2b5c99f50a813d35777c7ae29b
 }
 
-//Application entry point
 $(function(){
     Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
                      "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
