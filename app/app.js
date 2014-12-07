@@ -21,7 +21,11 @@ var Issue = Parse.Object.extend("Issue", {
 		return ellipsize(this.get("content"), 140);
 	}
 });
-var Comment = Parse.Object.extend("Comment");
+var Comment = Parse.Object.extend("Comment", {
+	getTimeSince: function() {
+		return moment(this.createdAt).fromNow();
+	}
+});
 var Tags = Parse.Object.extend("Tags");
 
 var olMap = null;
@@ -157,10 +161,11 @@ function loadIssueComments(e) {
 	var query = new Parse.Query(Comment);
 	var issue = new Issue();
 	issue.id = $(e.currentTarget).attr("data-issue-id");
+	issue.set('content',  $(e.currentTarget).attr("data-issue-content"));
 	query.equalTo("issue", issue);
 	query.find({
 		success: function(results) {
-			loadComments(results);
+			loadComments(issue, results);
 			alert("Successfully retrieved " + results.length + " comments.");
 		},
 		error: function(error) {
@@ -169,7 +174,8 @@ function loadIssueComments(e) {
 	});
 }
 
-function loadComments(results) {
+function loadComments(issue, results) {
+	/*
 	var html = "";
 	if (results.length > 0) {
 		html += "<div class='list-group'>";
@@ -192,7 +198,11 @@ function loadComments(results) {
 		html += "<p>No comments for given issue</p>";
 	}
 
-	$("#commentsForIssue").html(html);
+	$("#commentsForIssue").html(html);*/
+
+	var tpl = _.template($("#issue-comment").text());
+	var html = tpl({issue: issue, comments: results});
+	$("#sidebar").html(html);
 }
 
 function viewIssue(issue_id) {

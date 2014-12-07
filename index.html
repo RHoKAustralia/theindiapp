@@ -74,7 +74,7 @@
 	<h3>Search Results (<%= issues.length %>)</h3>
 	<div class="list-group">
     <% for(var i = 0; i < issues.length; i++) { %>
-	<div class="list-group-item issue-item" data-issue-id="<%= issues[i].id %>">
+	<div class="list-group-item issue-item" data-issue-id="<%= issues[i].id %>" data-issue-title="<%= issues[i].get('title') %>" data-issue-content="<%= issues[i].get('content') %>">
 		<div class="media">
 			<% var title = issues[i].titleShort() %>
 			<% if (title != null) { %>
@@ -93,27 +93,32 @@
     <script id="issue-comment" type="template">
         <input type="button" onclick="" value="< Go Back" />
 
-        <% var title = issues[i].titleShort() %>
+        <% var title = issue.titleShort() %>
         <% if (title != null) { %>
             <h2 class="media-left"> <%= title %> </h2>
         <% } else { %>
             <h2 class="media-left">(Untitled)</h2>
         <% } %>
 
-        <p class="media-right"> <%= issues[i].getTimeSince() %> </p>
+        <p class="media-right"> <%= issue.getTimeSince() %> </p>
+        <p><%= issue.get('content') %></p>
+        <% if(comments.length > 0) { %>
+            <h3>Comments (<%= comments.length %>)</h3>
 
-        <h3>Comments (<% comments.length %>)</h3>
 
         <div class="list-group">
             <% for(var i = 0; i < comments.length; i++) { %>
                 <div class="list-group-item">
                     <div class="media">
-
+                        <p><%= comments[i].get("comment") %></p>
                     </div>
                 </div>
             <% } %>
         </div>
-
+        <% } else { %>
+            <h3> Comments </h3>
+            <p> There are no comments. </p>
+        <% } %>
     </script>
 
   </head>
