@@ -101,6 +101,33 @@ function populateIssues(issues) {
     var tpl = _.template($("#issue-list").text());
     var html = tpl({issues: issues});
     $("#sidebar").html(html);
+    
+    var icons = [];
+    for(var i=0; i<issues.length; i++){
+        var location = issues[i].get("location");
+        
+        var iconFeature = new ol.Feature({
+              geometry: new ol.geom.Point([location._longitude, location._latitude]).transform('EPSG:4326', 'EPSG:3857'),
+              name: issues[i].get("title")
+        });
+//        var iconStyle = new ol.style.Style({
+//          image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+//            anchor: [0.5, 46],
+//            anchorXUnits: 'fraction',
+//            anchorYUnits: 'pixels',
+//            opacity: 0.75
+//          }))
+//        });
+//        iconFeature.setStyle(iconStyle);
+        icons.push(iconFeature);
+    }
+    var vectorSource = new ol.source.Vector({
+        features: icons
+    });
+    var vectorLayer = new ol.layer.Vector({
+        source: vectorSource
+    });
+    olMap.addLayer(vectorLayer);
 }
 
 $(function(){
@@ -131,7 +158,7 @@ $(function(){
         })
       ],
       view: new ol.View({
-        center: [144, -37],
+        center: ol.proj.transform([144, -37],'EPSG:4326', 'EPSG:3857') ,
         zoom: 4
       })
     });
