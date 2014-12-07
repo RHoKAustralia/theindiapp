@@ -44,7 +44,7 @@
         border-radius: 4px;
         cursor: pointer;
       }
-        
+
       .search {
         padding:8px 15px;
         background:rgba(50, 50, 50, 0.2);
@@ -68,21 +68,18 @@
     <script type="text/javascript" src="assets/js/parse-1.3.2.min.js"></script>
     <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="app/app.js"></script>
-    <script type="text/javascript">
+    <script id="issue-list" type="template">
 
-//     $(function() {
-//    <script id="issue-list" type="template">
-//
-//    <% for(var i = 0; i < issues.length; i++) { %>
-//
-//        <p> <%= issues[i].get("title") %> </p>
-//        <p> <%= issues[i].get("created_at") %> </p>
-//        <p> <%= issues[i].get("content") %> </p>
-//        <p> <%= issues[i].get("location") %> </p>
-//
-//      });
+    <% for(var i = 0; i < issues.length; i++) { %>
 
-    </script>?
+        <p> <%= issues[i].get("title") %> </p>
+        <p> <%= issues[i].get("created_at") %> </p>
+        <p> <%= issues[i].get("content") %> </p>
+        <p> <%= issues[i].get("location") %> </p>
+
+    <% }); %>
+
+    </script>
 
   </head>
   <body>
@@ -162,7 +159,7 @@
               <div class="panel-body">
                   <h1>Voices4Indi</h1>
               </div>
-              
+
               <div id="sidebar" class="panel-collapse collapse in">
                   <!-- Select Multiple -->
               <div class="form-group">
