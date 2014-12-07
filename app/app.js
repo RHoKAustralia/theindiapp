@@ -1,4 +1,26 @@
-var Issue = Parse.Object.extend("Issue");
+function ellipsize(text, maxlength) {
+	if (text != null) {
+		if (text.length > maxlength) {
+			return text.substring(0, maxlength - 3) + "...";
+		} else {
+			return text;
+		}
+	} else {
+		return text;
+	}
+}
+
+var Issue = Parse.Object.extend("Issue", {
+	getTimeSince: function() {
+		return moment(this.createdAt).fromNow();
+	},
+	titleShort: function() {
+		return ellipsize(this.get("title"), 18);
+	},
+	descShort: function() {
+		return ellipsize(this.get("content"), 140);
+	}
+});
 var Comment = Parse.Object.extend("Comment");
 var Tags = Parse.Object.extend("Tags");
 
@@ -65,6 +87,7 @@ function refineIssues(tag){
 
     var tagQuery = new Parse.Query(Issue);
     tagQuery.containsAll("tags", tags);
+	tagQuery.descending("createdAt");
     tagQuery.find({
       success: function(results) {
         populateIssues(results);
