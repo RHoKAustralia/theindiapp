@@ -19,6 +19,9 @@ var Issue = Parse.Object.extend("Issue", {
 	},
 	descShort: function() {
 		return ellipsize(this.get("content"), 140);
+	},
+	isLoggedIn: function() {
+		return Parse.User.current() != null;
 	}
 });
 var Comment = Parse.Object.extend("Comment", {
@@ -205,10 +208,25 @@ function loadComments(issue, results) {
 	$("#sidebar").html(html);
 }
 
-function viewIssue(issue_id) {
-	var comments = Parse.Query(Comment);
-
-	$("#sidebar").html();
+function makeComment(e) {
+	e.preventDefault();
+	var issue = new Issue();
+	issue.id = $("#txtIssueId").val();
+	var comment = new Comment();
+	comment.set("author", loggedInUser);
+	comment.set("issue", issue);
+	comment.set("comment", $("#txtComment").val());
+	comment.save(null, {
+		success: function(obj) {
+			// Execute any logic that should take place after the object is saved.
+			alert('New object created with objectId: ' + obj.id);
+		},
+		error: function(obj, error) {
+			// Execute any logic that should take place if the save fails.
+			// error is a Parse.Error with an error code and message.
+			alert('Failed to create new object, with error code: ' + error.message);
+		}
+	});
 }
 
 $(function(){
@@ -232,6 +250,7 @@ $(function(){
     $(window).on("resize", applyMargins);
 
 	$('body').on('click', '.issue-item', loadIssueComments);
+	$('body').on('click', '#btnMakeComent', makeComment);
 
     olMap = new ol.Map({
       target: "map",
