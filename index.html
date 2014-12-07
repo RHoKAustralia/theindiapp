@@ -64,9 +64,12 @@
     <script type="text/javascript" src="app/app.js"></script>
     <script id="issue-list" type="template">
 
-    <% for(var i=0; i<issues.length; i++){ %>
+    <% for(var i = 0; i < issues.length; i++) { %>
 
         <p> <%= issues[i].get("title") %> </p>
+        <p> <%= issues[i].get("created_at") %> </p>
+        <p> <%= issues[i].get("content") %> </p>
+        <p> <%= issues[i].get("location") %> </p>
 
     <% } %>
 

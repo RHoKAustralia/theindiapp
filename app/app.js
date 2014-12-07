@@ -53,6 +53,13 @@ function applyInitialUIState() {
       $('.mini-submenu-left').fadeIn();
     }
 }
+
+function populateIssues(issues) {
+    var tpl = $("#issue-list").template();
+    var html = tpl({issues: issues});
+    $("#sidebar").html(html);
+}
+
 //Application entry point
 $(function(){
     Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
