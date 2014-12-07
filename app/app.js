@@ -53,11 +53,64 @@ function applyInitialUIState() {
       $('.mini-submenu-left').fadeIn();
     }
 }
+
+function refineIssues(tag){
+    
+    
+    
+    var tags = [];
+    //Set the tags based on the selection
+    $( "#qryIssueTags option:selected" ).each(function() {
+        tags.push($(this).val());
+    });
+
+    var tagQuery = new Parse.Query(Issue);
+    tagQuery.containsAll("tags", tags);
+    tagQuery.find({
+      success: function(results) {
+        loadIssues(results);
+        alert("Successfully retrieved " + results.length + " objects.");
+      },
+      error: function(error) {
+        alert("Error: " + error.code + " " + error.message);
+      }
+    });
+}
+
+ function loadIssues(results) {
+    var html = "";
+    $("#issuesDiv").html(html);
+}
+
+
+function initTags(){
+    //Fetch registered tags
+    var query = new Parse.Query(Tags);
+    query.find({
+        success: function(results) {
+            updateTags(results);
+        },
+        error: function(error) {
+            alert("Error: " + error.code + " " + error.message);
+        }
+    });
+}
+
+function updateTags(results) {
+    $(".issue-tag-list option").remove();
+    for (var i = 0; i < results.length; i++) {
+        var tag = results[i];
+        var value = tag.get("value");
+         $(".issue-tag-list").append("<option value='" + value + "'>" + value + "</option>")
+    }
+}
+
 //Application entry point
 $(function(){
     Parse.initialize("cfqmL781rPz7xlixkDxIirwPS6zfV6VT3rHP8Qms" /* app ID */,
                      "AmORKMDyEW0IesQGRr1CSYPcCF0lhhGYKFFvqDtq" /* JS */);
-
+    initTags();
+    $("body").on("click", "#btnSearch", refineIssues);
     $('.sidebar-left .slide-submenu').on('click',function() {
       var thisEl = $(this);
       thisEl.closest('.sidebar-body').fadeOut('slide',function(){

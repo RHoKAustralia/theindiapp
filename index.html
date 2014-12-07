@@ -44,6 +44,12 @@
         border-radius: 4px;
         cursor: pointer;
       }
+        
+      .search {
+        padding:8px 15px;
+        background:rgba(50, 50, 50, 0.2);
+        border:0px solid #dbdbdb;
+      }
     </style>
     <script id="home" type="template" data-title="Home">
 
@@ -62,13 +68,11 @@
     <script type="text/javascript" src="assets/js/parse-1.3.2.min.js"></script>
     <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="app/app.js"></script>
-    <script id="issue-list" type="template">
+    <script type="text/javascript">
 
-    <% for(var i=0; i<issues.length; i++){ %>
+      $(function() {
 
-        <p> <%= issues[i].get("title") %> </p>
-
-    <% } %>
+      });
 
     </script>
 
@@ -147,19 +151,23 @@
                   </span>
                 </h4>
               </div>
+              <div class="panel-body">
+                  <h1>Voices4Indi</h1>
+              </div>
+              
               <div id="sidebar" class="panel-collapse collapse in">
-                <div class="panel-body">
-                  <div class="list-group">
-                    <a href="#" class="list-group-item">
-                      <i class="fa fa-globe"></i> Open Street Map
-                    </a>
-                    <a href="#" class="list-group-item">
-                      <i class="fa fa-globe"></i> Bing
-                    </a>
-                    <a href="#" class="list-group-item">
-                      <i class="fa fa-globe"></i> WMS
-                    </a>
-                  </div>
+                  <!-- Select Multiple -->
+              <div class="form-group">
+                <label class="col-md-4 control-label" for="qryIssueTags">Tags</label>
+                <div class="col-md-8">
+                    <select id="qryIssueTags" name="qryIssueTags" class="form-control issue-tag-list" multiple="multiple">
+
+                    </select>
+                </div>
+              </div>
+                <button id="btnSearch" value="Search...">Search</button>
+                <div id="issuesDiv" class="panel-collapse collapse in">
+                    
                 </div>
               </div>
             </div>
